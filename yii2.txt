@@ -1,0 +1,204 @@
+高性能、基于组件的框架(适合大型网站)
+2.0采用最新技术和协议，包括php依赖包管理器composer、命名规范psr、gii生成器、
+活动记录active recard、强大缓存机制、traints特质,基于5.4
+
+归档文件安装（高级模版）：
+	1.下载
+	2.init.bat执行
+
+浏览器http://www.yii.cn/index.php?r=site/index
+
+定义全局函数：根目录建立helper文件夹->functions.php，index.php中引用
+\Yii::$app   应用实例 
+	\Yii::$app->request   应用实例下的request请求组件
+		调用组件
+			\Yii::$app->request->get('id',1)    //get请求，获取id,默认1
+			\Yii::$app->request->post('id')    //post请求
+			\Yii::$app->request->isPost    //判断是否为post
+			\Yii::$app->request->isGet	//判断是否为get
+			\Yii::$app->request->userIP    //获取用户ip
+	\Yii::$app->response    响应组件
+		\Yii::$app->response->statusCode=404
+		\Yii::$app->response->headers->add('pargma','no-cache')
+			\Yii::$app->response->headers->set('pargma','max-age=5')
+			\Yii::$app->response->headers->remove('pargma')
+			\Yii::$app->response->headers->add('location','http://www.baidu.com')
+		\Yii::$app->response->sendFile('./aa.txt')   //文件下载
+		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;    //输出格式
+	html组件
+	url组件：
+		例：http://www.yii.cn/backend/web/index.php?r=site/index
+		Url::base()   输出：/backend/web
+		Url::base(true)   输出：http://www.yii.cn/backend/web
+		Url::home()	输出：/backend/web/index.php
+		Url::home(true)		输出：http://www.yii.cn/backend/web/index.php
+		Url::current()	输出：/backend/web/index.php?r=user/index
+	
+		//url设置:        //后台配置中main.php里
+		'urlManager' => [
+			'enablePrettyUrl' => true,    //美化url
+			'showScriptName' => false,	//隐藏index.php文件  ，入口文件处添加.htaccess文件
+			'suffix' => '.html',	//设置后缀
+		],
+
+
+gii项目中一般不用
+
+
+
+
+开发环境:(开发和生产环境区别)
+	backend/web和fronend多了个  index-test.php测试文件
+	index.php默认开启debug,config/main-local.php 加载debug和gii模块
+高级模版：（高级和普通区别）
+	高级模版把模块区分开了
+		(前(frontend)后(backend)台区分)
+		console命令行执行
+		common公用(公用配置),前后台也可以单独配置
+		vendor核心文件(翻译：供应商)
+
+yii2默认开启csrf验证，表单添加<input type="hidden" name="_csrf" value="<?=\Yii::$app->request->csrfToken?>">
+表单名称: User[username]   模型名[表单名]
+$model->load($arr)    //将数据批量赋值到模型中,数据下标必须和Model的类名一致,load中字段必须出现在rules方法数组中,不然无法赋值
+	$arr=[
+		'User'=>[      //User为Model名称
+			'username'=>'aa',
+			'password'=>'bb',
+			'status'=>1,
+		],
+	];
+$model->load($arr,'');    将数据批量赋值到模型中，跟模型中的字段一一对应
+\Yii::$app->end()   //终止程序
+控制器名称：大驼峰（CarInfoController.php），操作名：小驼峰（actionCarList）。视图中：对应控制器文件夹(car-info)，操作(car-list)
+	
+
+--------------------------------------------------
+http://blog.csdn.net/xundh/article/details/45955195/        //数据操作方法
+save方法判断更新还是添加,替代insert和update,并且启用验证(调用rules规则):$model->validate()   ,rules规则是$model->validate()时调用
+数据库操作：    
+	添加：
+		$model=new User;	------------->$model->load($arr);	--------->$model->save();      //返回bool
+	修改：
+		$obj = User::findOne($id);  --------->$obj->load($arr);	-------->$obj->save();		//返回bool	
+	查找：
+		Article::find()->all();		//返回所有数据对象，放入组合成的数组中
+		Article::find()->one();
+		Article::find()->where(array('id'=>1))->asArray()->all();   //where条件
+			where(['>','id',3])
+			where(['between','id',2,5])
+			where('like','title','测试')
+		Article::find()->where(array('id'=>1))->exists();    //判断是否存在   返回bool
+		
+		Article::findOne(1)  一条数据对象
+			findOne(['id'=>9])
+		---------------------------
+		关联:
+			$date=$model::find()->select("yii_Article.*,c.name")->leftJoin(' yii_category as c','yii_Article.cate_id=c.id')->asArray()->all();  
+	删除：
+		$model=new User;
+		$res=$model->deleteAll(['id'=>1]);   //返回受影响的行数
+		
+---------------------------
+cookie:
+	use yii\web\cookie
+	$cookie=\Yii:$app->request->cookies    //cookie集合
+	$cookie->add(new Cookie(array('name'=>'aa','value'=>'bb')))   //添加/修改cookie
+	$cookie->remove('aa')   //删除cookie
+	$cookie->getValue('aa');   //获取cookie
+		$cookie->getValue('aa','moren');   //没有cookie默认返回 
+session:
+	$session=\Yii:$app->request->session;
+	$session->open();   //开启session
+	$session->isActive  //判断session是否开启
+		对象方式:
+			$session->set('a','aa');   //添加session
+			$session->get('a');    //获取session
+			$session->remove('a')  //删除session
+		数组方式:
+			$session['a']='aa';   //添加
+			echo $session['a']   //获取
+			unset($session['a'])    //删除
+-----------------------------------
+调用(渲染)模版:return $this->renderPartial('index',$data);   //$data为分配模版的数组变量,模版
+render渲染父模版   renderPartial不渲染父模版
+	layouts父模版文件夹
+	public $layout='test'; 定义布局文件
+数据块
+	layout：
+		<?=$this->blocks['block1']?>
+		<?=$content;?>
+	视图：
+		<?php $this->beginBlock('block1');?>
+			内容
+		<?php $this->endBlock();?>
+		
+	
+
+项目注意：
+	访问链接<?php echo yii\helpers\Url::toRoute('/car/genre/genre-list');?>     //	/car板块/genre(控制器)/genre-list操作	
+	$this->exitIfNotPost();   //判断是否post
+	service层、responsitory层    操作不需要action开头
+	获取参数：
+		$car_genre_id=$this->getParam('car_genre_id','post');
+		if (empty($carGenreId)) {
+		    $this->errorParam();
+		}
+	获取其他板块内容
+		controller中:
+			$carGenreService=new CarGenreService();
+			$this->data['carGenreData'] = $carGenreService->getAllCarGenre();   //获取所有车型
+		service中：     //参数不需要传CarGenreEntity $carGenreEntity实体（一般在编辑、添加用用到）
+			return CarGenreRepository::getAllCarGenre();
+		responsitory：
+			return CarGenreEntity::find()->all();
+
+	添加：
+		controller中： 接受数据->返回
+			if (\Yii::$app->request->isPost) {//post请求处理
+			    $carGenreEntity = new CarGenreEntity();         //实例化
+			    $carGenreEntity->load(\Yii::$app->request->post(),'');    //model中load
+			    $data = $this->_carGenreService->addCarGenre($carGenreEntity);    //通过sevice对象,调用sevice中add方法
+
+			    非ajax请求：
+				if (!empty($data)) {
+					Utils::messageBox('',Url::toRoute('/network/network/network-list'));
+				}else{
+					$this->data['showMsg'] = $this->_networkService->getErrMsg ();
+				}
+			    ajax请求调用
+				$this->exportJson($data,$this->_carGenreService->getErrCode(),$this->_carGenreService->getErrMsg()); 
+			}else{  get请求
+			    return $this->render('add-car-genre',$this->data);
+			}
+		service中：  处理业务逻辑		return bool
+			 public function addCarGenre(CarGenreEntity $carGenreEntity){
+				if ($carGenreEntity->validate()) {   //数据校验
+					$data = CarGenreRepository::addCarGenre($carGenreEntity);   //repository层中处理数据
+					 if ($data) {
+						return true;//新增成功
+					 }else{
+						return $this->setErrorAndReturn('增加车型失败');
+					 }
+				}else{
+					return $this->setErrorAndReturn('数据校验不正确');
+				}
+			}
+		respository：数据库处理		return object|bool
+			 public static function addCarGenre(CarGenreEntity $carGenreEntity){   //静态方法
+				if ($carGenreEntity->save()) {
+				    return $carGenreEntity;
+				}else{
+				    return false;
+				}
+			  }
+	删除：
+		接受参数
+		处理
+		
+
+
+
+???????????
+	前后台访问：前后台各分配域名
+	Url::toRoute
+	getCarGenreList(Pagination $pagination,$params=[])  参数
