@@ -5,7 +5,7 @@
 归档文件安装（高级模版）：
 	1.下载
 	2.init.bat执行  
-	嘎嘎
+	嘎嘎11
 
 浏览器http://www.yii.cn/index.php?r=site/index
 
